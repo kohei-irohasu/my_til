@@ -33,3 +33,75 @@
 	  - updated_at, created_at
 		- type(STI)
 		- モデル名_count, 関連先のテーブルのキャッシュ
+- モデルの作成
+  - `ApplicationRecord < ActiveRecord::Base`
+	  - 通常のrubyクラスがActive Recordモデルに変える
+  - `class Book < ApplicationRecord end`
+	  - データベース内の`books`テーブルと対応づけられる
+		- テーブル内の各カラムが`Book`クラスの属性に対応付けられる
+		- `Book`モデルの1個のインスタンスが、`books`テーブル内の１行を表現する
+	- テーブルの作成は基本、Active Recordのマイグレーションで行う
+	  - `bin/rails g migration CreateBooks title:string, author`
+		- 型をつけないとデフォルトでstringになる
+	- 名前空間付きモデルを作成する
+		- デフォルトでは`app/models`に配置
+		- `bin/rails g model Book::Order`
+			- `class Book::Order < ApplicationRecord`
+			- テーブル名が親のモデル名をprefixにつけた形になる
+				- `book_orders`になる
+	- 命名規約を上書きする
+	  - `ActiveRecord::Base`を継承してるから使える
+	  - テーブル名
+		  - `self.table_name = "my_books"`と上書きできる
+		- 主キー
+		  - `self.primary_key = "book_id"`
+			- ↑主キー以外のカラムに`id`をつけるべきではない
+  - CRUD
+	  - Create, Read, Update, Delete
+			- Active Recordが自動的に用意してくれる
+			- 背後のDBに対して、SQLを発行している
+		- Create
+			- `create`
+				- 新しいオブジェクトが返され、DBにも保存される
+			- DBにコミットするときに`id`が自動的に割り振られる
+				- `create` -> idあり
+				- `new` -> idなし
+				- `save` -> idあり
+			- `new`は新しいオブジェクトを返すだけ
+			- `save`でデータベースに保存
+			- コールバックやバリデーションをトリガーせずにDBに保存したいとき
+			  - `insert`
+				- `insert_all`
+		- Read
+			- データを取ってくるAPI
+				- `Book.all`, `Book.first`などなど
+				- `find_by`, `where`
+				- 他にもたくさんある
+		- Update
+			- オブジェクトの属性を変更して、DBに保存することができる
+				- `book.update(title: "The Lord of the Rings: The Fellowship of the Ring")`
+			- コールバックやバリデーションをトリガーしたくないとき
+			  - `update_all`
+		- Delete
+		  - データベースからオブジェクトを削除する
+				- `book.destroy`
+			- 複数レコードを一括削除したいとき
+				- `Book.destroy_by(author: "Douglas Adams")`
+				- `Book.destroy_all`
+			- コールバックやバリデーションをトリガーしたくないとき
+			  - `Book.find_by(title: "The Load of the Rings").delete`
+				- `Book.delete_all`
+	- バリデーション
+	  - データベースに書き込まれる前にモデルの状態を検証することができる
+		  - `save`, `create`, `update`はデータを永続化する前にバリデーションを行う
+		  - `validates :name, presence: true`
+	- コールバック
+	  - モデルのライフサイクル内で特定のイベントにコードをアタッチできる
+		  - モデルの特定のイベントでコードを実行できる
+  - マイグレーション
+	  - データベーススキーマを管理するためのDSL
+		- マイグレーションをファイルに保存して、`bin/rails db`を実行するとDBに対してマイグレーションが実行される
+	- 関連付け(association)
+	  - 関連付けを利用することでモデル間のリレーションシップ（関係）を定義できる
+		- １対１、１対多、多対多の関係がある
+		- `has_many :books`みたいな感じ
